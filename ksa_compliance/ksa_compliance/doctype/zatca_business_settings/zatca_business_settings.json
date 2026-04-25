@@ -1,0 +1,575 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{company}-{country}-{currency}-{##}",
+ "creation": "2024-01-11 15:31:56.241248",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_break_ljdo",
+  "company",
+  "company_unit",
+  "company_unit_serial",
+  "company_category",
+  "country",
+  "country_code",
+  "enable_zatca_integration",
+  "sync_with_zatca",
+  "type_of_business_transactions",
+  "currency",
+  "column_break_kjzc",
+  "company_address",
+  "street",
+  "additional_street",
+  "building_number",
+  "city",
+  "postal_code",
+  "district",
+  "advance_payment_depends_on",
+  "advance_payment_item",
+  "auto_apply_advance_payments",
+  "advance_payment_tax_account",
+  "status",
+  "column_break_izkt",
+  "seller_id_tab",
+  "seller_id_section",
+  "seller_name",
+  "vat_registration_number",
+  "column_break_abnh",
+  "enable_branch_configuration",
+  "section_break_muug",
+  "other_ids",
+  "vat_account_configuration_tab",
+  "automatic_vat_account_configuration",
+  "linked_tax_account",
+  "account_name",
+  "account_number",
+  "column_break_sdxq",
+  "tax_rate",
+  "zatca_tax_category",
+  "cli_tab",
+  "cli_setup",
+  "setup_zatca_cli",
+  "column_break_tsik",
+  "zatca_cli_path",
+  "java_home",
+  "check_zatca_cli",
+  "automatic_setup_configuration_section",
+  "override_cli_download_url",
+  "override_jre_download_url",
+  "integration_tab",
+  "configuration_section",
+  "validate_generated_xml",
+  "block_invoice_on_invalid_xml",
+  "column_break_cjdg",
+  "fatoora_server",
+  "onboarding_section",
+  "create_csr",
+  "csr",
+  "compliance_request_id",
+  "security_token",
+  "secret",
+  "column_break_okfu",
+  "perform_compliance_checks",
+  "get_production_csid",
+  "production_request_id",
+  "production_security_token",
+  "production_secret"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_zatca_integration",
+   "fieldtype": "Check",
+   "label": "Enable ZATCA Integration"
+  },
+  {
+   "fieldname": "company_address",
+   "fieldtype": "Link",
+   "label": "Company Address",
+   "options": "Address",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "seller_id_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "seller_name",
+   "fieldtype": "Data",
+   "label": "Seller Name",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vat_registration_number",
+   "fieldtype": "Data",
+   "label": "Vat Registration Number",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "fieldname": "other_ids",
+   "fieldtype": "Table",
+   "label": "Additional IDs",
+   "options": "Additional Seller IDs",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id"
+  },
+  {
+   "fieldname": "column_break_kjzc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "company_address.address_line2",
+   "fieldname": "additional_street",
+   "fieldtype": "Data",
+   "label": "Additional Street",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company_address.pincode",
+   "fieldname": "postal_code",
+   "fieldtype": "Data",
+   "label": "Postal Code",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company_address.address_line1",
+   "fieldname": "street",
+   "fieldtype": "Data",
+   "label": "Street",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company_address.custom_building_number",
+   "fieldname": "building_number",
+   "fieldtype": "Data",
+   "label": "Building Number",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company_address.city",
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "company_address.custom_area",
+   "fieldname": "district",
+   "fieldtype": "Data",
+   "label": "District",
+   "read_only": 1
+  },
+  {
+   "fieldname": "seller_id_tab",
+   "fieldtype": "Tab Break",
+   "label": "Seller ID"
+  },
+  {
+   "fetch_from": "company.country",
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "label": "Country",
+   "options": "Country",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "sync_with_zatca",
+   "fieldtype": "Select",
+   "label": "Sync with ZATCA",
+   "options": "Live\nBatches"
+  },
+  {
+   "fieldname": "tab_break_ljdo",
+   "fieldtype": "Tab Break",
+   "label": "Seller Details"
+  },
+  {
+   "fieldname": "integration_tab",
+   "fieldtype": "Tab Break",
+   "label": "Integration"
+  },
+  {
+   "fetch_from": "country.code",
+   "fieldname": "country_code",
+   "fieldtype": "Data",
+   "label": "Country Code",
+   "read_only": 1
+  },
+  {
+   "default": "Let the system decide (both)",
+   "description": "Changing this setting requires redoing the onboarding process, starting from CSR generation.",
+   "fieldname": "type_of_business_transactions",
+   "fieldtype": "Select",
+   "label": "Type of Business Transactions",
+   "options": "Let the system decide (both)\nSimplified Tax Invoices\nStandard Tax Invoices"
+  },
+  {
+   "description": "Generate a CSR and make a compliance CSID request through ZATCA.",
+   "fieldname": "create_csr",
+   "fieldtype": "Button",
+   "label": "Onboard"
+  },
+  {
+   "fieldname": "compliance_request_id",
+   "fieldtype": "Data",
+   "label": "Compliance Request ID",
+   "read_only": 1
+  },
+  {
+   "description": "The Name of the onboarded EGS unit on Fatoorah platform.",
+   "fetch_from": "company_address.address_title",
+   "fetch_if_empty": 1,
+   "fieldname": "company_unit",
+   "fieldtype": "Data",
+   "label": "Company Unit",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "description": "ID of the onboarded EGS unit on Fatoorah platform. (unique)\n<br>\nFormat: <pre style=\"display: inline;\">1-Solution Provider Name|2-Model or version|3-Serial</pre>\n<br>\nExample: <pre style=\"display: inline;\">1-ERPNext|2-15|3-1</pre>",
+   "fieldname": "company_unit_serial",
+   "fieldtype": "Data",
+   "label": "Company Unit Serial",
+   "read_only_depends_on": "eval:frappe.user_roles.indexOf('System Manager') === -1 && doc.production_request_id",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "company.domain",
+   "fetch_if_empty": 1,
+   "fieldname": "company_category",
+   "fieldtype": "Data",
+   "label": "Company Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "csr",
+   "fieldtype": "Small Text",
+   "label": "CSR",
+   "read_only": 1
+  },
+  {
+   "fieldname": "security_token",
+   "fieldtype": "Small Text",
+   "label": "Security Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "secret",
+   "fieldtype": "Password",
+   "label": "Secret",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_okfu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Use the compliance request from onboarding to get a production CSID from ZATCA, using which invoices can be submitted to ZATCA through reporting or clearance APIs.",
+   "fieldname": "get_production_csid",
+   "fieldtype": "Button",
+   "label": "Get Production CSID"
+  },
+  {
+   "fieldname": "production_security_token",
+   "fieldtype": "Small Text",
+   "label": "Production Security Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "production_secret",
+   "fieldtype": "Password",
+   "label": "Production Secret",
+   "read_only": 1
+  },
+  {
+   "fieldname": "configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration"
+  },
+  {
+   "fieldname": "onboarding_section",
+   "fieldtype": "Section Break",
+   "label": "Onboarding"
+  },
+  {
+   "fieldname": "production_request_id",
+   "fieldtype": "Data",
+   "label": "Production Request ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cjdg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Use the compliance request from onboarding to perform compliance checks for the different invoice types. This is a prerequisite to retrieving a production CSID",
+   "fieldname": "perform_compliance_checks",
+   "fieldtype": "Button",
+   "label": "Perform Compliance Checks"
+  },
+  {
+   "default": "0",
+   "description": "If enabled, validates the generated ZATCA XML when creating Sales Invoice Additional Fields. This has a performance impact, so it's recommended to enable only for testing or troubleshooting problems.",
+   "fieldname": "validate_generated_xml",
+   "fieldtype": "Check",
+   "label": "Validate Generated XML"
+  },
+  {
+   "description": "The path to the executable for ZATCA CLI, e.g.<br>\n<pre style=\"display: inline;\">/home/frappe/zatca-cli/bin/zatca-cli</pre>",
+   "fieldname": "zatca_cli_path",
+   "fieldtype": "Data",
+   "label": "CLI Path",
+   "read_only_depends_on": "eval:doc.cli_setup==='Automatic'"
+  },
+  {
+   "depends_on": "eval:doc.zatca_cli_path",
+   "fieldname": "check_zatca_cli",
+   "fieldtype": "Button",
+   "label": "Check ZATCA CLI"
+  },
+  {
+   "default": "Automatic",
+   "description": "<p>The ZATCA CLI is an open-source tool used to generate CSRs, validate, and sign XML sales invoices sent to ZATCA.</p>\n\n<p><b>Automatic:</b> One-click setup downloads the CLI and Java 11 runtime from GitHub by default (configurable)</p>\n<p><b>Manual:</b> You manually deploy the CLI on the server as well as a Java 11 runtime and configure the path to the deployed CLI</p>",
+   "fieldname": "cli_setup",
+   "fieldtype": "Select",
+   "label": "CLI Setup",
+   "options": "Automatic\nManual",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.cli_setup===\"Automatic\"",
+   "description": "If left empty, the CLI will be downloaded from <a href=\"https://github.com/lavaloon-eg/zatca-cli/releases/\">https://github.com/lavaloon-eg/zatca-cli/releases/</a>. To override, place the full URL of a zip file from one of the releases (or a release you made from your fork)",
+   "fieldname": "override_cli_download_url",
+   "fieldtype": "Data",
+   "label": "Override CLI Download URL"
+  },
+  {
+   "depends_on": "eval:doc.cli_setup===\"Automatic\"",
+   "description": "If left empty, JRE 11 will be downloaded from <a href=\"https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23%2B9/OpenJDK11U-jre_x64_linux_hotspot_11.0.23_9.tar.gz\">https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.23+9/OpenJDK11U-jre_x64_linux_hotspot_11.0.23_9.tar.gz</a>",
+   "fieldname": "override_jre_download_url",
+   "fieldtype": "Data",
+   "label": "Override JRE Download URL"
+  },
+  {
+   "depends_on": "eval:doc.cli_setup==='Automatic'",
+   "fieldname": "setup_zatca_cli",
+   "fieldtype": "Button",
+   "label": "Download and Set Up ZATCA CLI"
+  },
+  {
+   "description": "<pre style=\"display: inline;\">JAVA_HOME</pre> path used for running the CLI. Leave blank to use the default system Java installation",
+   "fieldname": "java_home",
+   "fieldtype": "Data",
+   "label": "Java Home",
+   "read_only_depends_on": "eval:doc.cli_setup === 'Automatic'"
+  },
+  {
+   "fieldname": "cli_tab",
+   "fieldtype": "Tab Break",
+   "label": "CLI"
+  },
+  {
+   "fieldname": "column_break_tsik",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.cli_setup === 'Automatic'",
+   "fieldname": "automatic_setup_configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Automatic Setup Configuration"
+  },
+  {
+   "description": "Sandbox: ZATCA test environment<br>\nSimulation: Test environment requires OTP from Fatoorah platform<br>\nProduction: ZATCA production enviroment",
+   "fieldname": "fatoora_server",
+   "fieldtype": "Select",
+   "label": "Fatoora Server",
+   "options": "Sandbox\nSimulation\nProduction"
+  },
+  {
+   "fieldname": "vat_account_configuration_tab",
+   "fieldtype": "Tab Break",
+   "label": "VAT Account Configuration"
+  },
+  {
+   "fieldname": "column_break_sdxq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "description": "The VAT rate that will be added in the account, the created item tax template and the sales taxes and charges template",
+   "fieldname": "tax_rate",
+   "fieldtype": "Percent",
+   "label": "Tax Rate",
+   "mandatory_depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "description": "The VAT category that will be added in the item tax template and the sales taxes and charges template",
+   "fieldname": "zatca_tax_category",
+   "fieldtype": "Select",
+   "label": "ZATCA Tax Category",
+   "mandatory_depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "options": "\nStandard rate\nServices outside scope of tax / Not subject to VAT || {manual entry}\nExempt from Tax || Financial services mentioned in Article 29 of the VAT Regulations\nExempt from Tax || Life insurance services mentioned in Article 29 of the VAT Regulations\nExempt from Tax || Real estate transactions mentioned in Article 30 of the VAT Regulations\nExempt from Tax || Qualified Supply of Goods in Duty Free area\nZero rated goods || Export of goods\nZero rated goods || Export of services\nZero rated goods || The international transport of Goods\nZero rated goods || International transport of passengers\nZero rated goods || Services directly connected and incidental to a Supply of international passenger transport\nZero rated goods || Supply of a qualifying means of transport\nZero rated goods || Any services relating to Goods or passenger transportation as defined in article twenty five of these Regulations\nZero rated goods || Medicines and medical equipment\nZero rated goods || Qualifying metals\nZero rated goods || Private education to citizen\nZero rated goods || Private healthcare to citizen\nZero rated goods || Supply of qualified military goods",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "fieldname": "linked_tax_account",
+   "fieldtype": "Link",
+   "label": "Linked Tax Account",
+   "options": "Account",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "description": "The Parent \"Duties and Taxes\"<br>\nThis account is the responsible account for the VAT transactions.",
+   "fieldname": "account_name",
+   "fieldtype": "Data",
+   "label": "Account Name",
+   "mandatory_depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "description": "The number that will be added to the account name.<br>\nFor example: 2301 - VAT",
+   "fieldname": "account_number",
+   "fieldtype": "Data",
+   "label": "Account Number",
+   "mandatory_depends_on": "eval:doc.automatic_vat_account_configuration === 1",
+   "set_only_once": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.validate_generated_xml",
+   "description": "If enabled, submission of sales invoices that produce invalid XML will be blocked.<br>\nRequires ZATCA CLI 2.1.0 or later",
+   "fieldname": "block_invoice_on_invalid_xml",
+   "fieldtype": "Check",
+   "label": "Block Invoice on Invalid XML"
+  },
+  {
+   "default": "0",
+   "description": "Creates tax account under Duties and Taxes.\n<br>\nCreates Tax Category, Sales Taxes and Charges Template and Item Wise Tax Template.",
+   "fieldname": "automatic_vat_account_configuration",
+   "fieldtype": "Check",
+   "label": "Automatic VAT Account Configuration",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_abnh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Enable in case of multiple branches with different commercial registration number.\n<br>\n<b>Warning:</b> This requires manual configuration of an Accounting Dimension for company branches.",
+   "fieldname": "enable_branch_configuration",
+   "fieldtype": "Check",
+   "label": "Enable Branch Configuration"
+  },
+  {
+   "fieldname": "section_break_muug",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "advance_payment_item",
+   "fieldtype": "Link",
+   "label": "Advance Payment Item",
+   "options": "Item",
+   "read_only_depends_on": "eval: doc.advance_payment_item && !doc.__unsaved"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_apply_advance_payments",
+   "fieldtype": "Check",
+   "label": "Auto Apply Advance Payments"
+  },
+  {
+   "description": "\u26a0\ufe0f Payment Entry option is still in Beta on Version 15 \u2014 use at your own risk.",
+   "fieldname": "advance_payment_depends_on",
+   "fieldtype": "Select",
+   "label": "Advance Payment Depends On",
+   "options": "Sales Invoice\nPayment Entry"
+  },
+  {
+   "fieldname": "advance_payment_tax_account",
+   "fieldtype": "Link",
+   "label": "Advance Payment Tax Account",
+   "options": "Account"
+  },
+  {
+   "default": "Pending Activation",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Pending Activation\nActive\nWithdrawn"
+  },
+  {
+   "fieldname": "column_break_izkt",
+   "fieldtype": "Column Break",
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-19 09:46:53.508504",
+ "modified_by": "Administrator",
+ "module": "KSA Compliance",
+ "name": "ZATCA Business Settings",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "green",
+   "title": "Active"
+  },
+  {
+   "color": "Yellow",
+   "title": "Pending Activation"
+  },
+  {
+   "color": "Red",
+   "title": "Withdrawn"
+  }
+ ],
+ "title_field": "company",
+ "track_changes": 1
+}
