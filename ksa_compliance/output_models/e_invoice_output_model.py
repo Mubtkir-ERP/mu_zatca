@@ -49,7 +49,7 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
             use this calculation to get the actual item amount exclusive of vat: "item_amount / 1 + tax_percent"
         """
         item["amount"] = (
-            flt(abs(item["amount"]) / (1 + (tax_percent / 100)), 2)
+            flt(abs(item["amount"]) / (1 + (tax_percent / 100)), 3)
             if is_tax_included
             else item["amount"]
         )
@@ -945,6 +945,19 @@ class SalesEinvoice(Einvoice):
             source_doc=self.sales_invoice_doc,
             xml_name="grand_total",
             parent="invoice",
+        )
+        # Fix: ZATCA validates BR-CO-14: TaxInclusiveAmount = TaxableAmount + TaxAmount
+        # When each value is independently rounded in the XML template, a mismatch occurs.
+        # Example: net_total=458.96671 -> 458.97, tax=68.84501 -> 68.85, sum=527.82
+        #          but grand_total=527.81172 -> 527.81 (independent rounding, not matching sum)
+        # Solution: recalculate grand_total from the already-rounded net_total and tax values
+        # so TaxInclusiveAmount in XML = round(net_total,2) + round(tax,2) consistently.
+        rounded_net = round(abs(self.sales_invoice_doc.net_total), 2)
+        rounded_tax = round(abs(self.sales_invoice_doc.total_taxes_and_charges), 2)
+        self.result["invoice"]["grand_total"] = (
+            -1 * (rounded_net + rounded_tax)
+            if self.sales_invoice_doc.is_return
+            else rounded_net + rounded_tax
         )
         self.get_float_value(
             field_name="total_advance",
