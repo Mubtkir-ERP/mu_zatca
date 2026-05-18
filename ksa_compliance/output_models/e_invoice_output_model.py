@@ -57,7 +57,22 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
         item["base_amount"] = item["amount"] + item["discount_amount"]
         item["tax_percent"] = tax_percent
         item["tax_amount"] = tax_amount
-        item["total_amount"] = tax_amount + abs(item["amount"])
+
+        # Fix BR-KSA-51: compute total_amount from pre-rounded components so that
+        # RoundingAmount in XML always equals round(LineExtensionAmount,2) + round(TaxAmount,2)
+        rounded_amount = round(abs(item["amount"]), 2)
+        rounded_tax = round(tax_amount, 2)
+        item["total_amount"] = rounded_amount + rounded_tax
+
+        # Fix BR-KSA-EN16931-07: PriceAmount must equal BaseAmount - AllowanceAmount
+        # Independent rounding of each value breaks this equality, so we derive PriceAmount
+        # from the already-rounded BaseAmount and AllowanceAmount instead of rounding amount directly.
+        if item["discount_amount"]:
+            rounded_disc = round(abs(item["discount_amount"]), 2)
+            rounded_base = round(abs(item["base_amount"]), 2)
+            item["net_price_for_xml"] = rounded_base - rounded_disc
+        else:
+            item["net_price_for_xml"] = rounded_amount
 
     return item_lines
 
