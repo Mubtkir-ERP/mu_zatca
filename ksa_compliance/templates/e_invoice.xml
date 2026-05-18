@@ -235,14 +235,19 @@
             </cac:ClassifiedTaxCategory>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount currencyID="{{ invoice.currency_code }}">{{ item.net_price_for_xml }}</cbc:PriceAmount>
-            <cbc:BaseQuantity unitCode="PCE">{{ item.qty }}</cbc:BaseQuantity>
             {% if item.discount_amount %}
+            {%- set r_base = rounded(item.base_amount, 2) -%}
+            {%- set r_disc = rounded(item.discount_amount, 2) -%}
+            <cbc:PriceAmount currencyID="{{ invoice.currency_code }}">{{ rounded(r_base - r_disc, 2) }}</cbc:PriceAmount>
+            <cbc:BaseQuantity unitCode="PCE">{{ item.qty }}</cbc:BaseQuantity>
             <cac:AllowanceCharge>
                 <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
-                <cbc:Amount currencyID="{{ invoice.currency_code }}">{{ rounded(item.discount_amount, 2) }}</cbc:Amount>
-                <cbc:BaseAmount currencyID="{{ invoice.currency_code }}">{{ rounded(item.base_amount, 2) }}</cbc:BaseAmount>
+                <cbc:Amount currencyID="{{ invoice.currency_code }}">{{ r_disc }}</cbc:Amount>
+                <cbc:BaseAmount currencyID="{{ invoice.currency_code }}">{{ r_base }}</cbc:BaseAmount>
             </cac:AllowanceCharge>
+            {% else %}
+            <cbc:PriceAmount currencyID="{{ invoice.currency_code }}">{{ rounded(item.amount, 2) }}</cbc:PriceAmount>
+            <cbc:BaseQuantity unitCode="PCE">{{ item.qty }}</cbc:BaseQuantity>
             {% endif %}
         </cac:Price>
     </cac:InvoiceLine>
