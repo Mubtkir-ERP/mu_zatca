@@ -146,6 +146,7 @@
     </cac:PaymentMeans>
     {% endif %}
     {% for tax_category in invoice.tax_categories %}
+    {% if tax_category.total_discount > 0.001 %}
     <cac:AllowanceCharge>
         <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
         <cbc:AllowanceChargeReason>Discount</cbc:AllowanceChargeReason>
@@ -168,6 +169,7 @@
                 </cac:TaxScheme>
             </cac:TaxCategory>
     </cac:AllowanceCharge>
+    {% endif %}
     {% endfor %}
     <cac:TaxTotal>
         <cbc:TaxAmount currencyID="{{ invoice.currency_code }}">{{ rounded(invoice.total_taxes_and_charges or 0.0, 2) }}</cbc:TaxAmount>
@@ -233,7 +235,7 @@
             </cac:ClassifiedTaxCategory>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount currencyID="{{ invoice.currency_code }}">{{ rounded(item.amount, 2) }}</cbc:PriceAmount>
+            <cbc:PriceAmount currencyID="{{ invoice.currency_code }}">{{ item.net_price_for_xml }}</cbc:PriceAmount>
             <cbc:BaseQuantity unitCode="PCE">{{ item.qty }}</cbc:BaseQuantity>
             {% if item.discount_amount %}
             <cac:AllowanceCharge>
