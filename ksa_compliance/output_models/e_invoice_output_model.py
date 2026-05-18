@@ -70,7 +70,9 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
         if item["discount_amount"]:
             rounded_disc = round(abs(item["discount_amount"]), 2)
             rounded_base = round(abs(item["base_amount"]), 2)
-            item["net_price_for_xml"] = rounded_base - rounded_disc
+            # Extra round() needed: subtracting two floats still produces floating point artifacts
+            # e.g. round(165217.39,2) - round(91304.34,2) = 73913.04000000001 in Python
+            item["net_price_for_xml"] = round(rounded_base - rounded_disc, 2)
         else:
             item["net_price_for_xml"] = rounded_amount
 
