@@ -64,17 +64,10 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
         rounded_tax = round(tax_amount, 2)
         item["total_amount"] = rounded_amount + rounded_tax
 
-        # Fix BR-KSA-EN16931-07: PriceAmount must equal BaseAmount - AllowanceAmount
-        # Independent rounding of each value breaks this equality, so we derive PriceAmount
-        # from the already-rounded BaseAmount and AllowanceAmount instead of rounding amount directly.
-        if item["discount_amount"]:
-            rounded_disc = round(abs(item["discount_amount"]), 2)
-            rounded_base = round(abs(item["base_amount"]), 2)
-            # Extra round() needed: subtracting two floats still produces floating point artifacts
-            # e.g. round(165217.39,2) - round(91304.34,2) = 73913.04000000001 in Python
-            item["net_price_for_xml"] = round(rounded_base - rounded_disc, 2)
-        else:
-            item["net_price_for_xml"] = rounded_amount
+        # Note: PriceAmount (net_price_for_xml) is computed in the Jinja template using
+        # rounded(base_amount,2) - rounded(discount_amount,2) to ensure it uses the same
+        # rounding function (frappe.utils.data.rounded / ROUND_HALF_UP) as BaseAmount and
+        # AllowanceAmount. Python's built-in round() uses banker's rounding which differs.
 
     return item_lines
 
