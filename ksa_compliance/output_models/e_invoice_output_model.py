@@ -49,7 +49,7 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
             use this calculation to get the actual item amount exclusive of vat: "item_amount / 1 + tax_percent"
         """
         item["amount"] = (
-            flt(abs(item["amount"]) / (1 + (tax_percent / 100)), 3)
+            (abs(item["amount"]) / (1 + (tax_percent / 100)))
             if is_tax_included
             else item["amount"]
         )
@@ -117,15 +117,19 @@ def append_tax_categories_to_item(item_lines: list, taxes_and_charges: str | Non
             + str(item_tax_category.reason_code)
             + str(item["tax_percent"])
         )
+        
+        item_tax_amt = flt(item_tax_category_details["tax_amount"], 2)
+        item_taxable_amt = flt(item_tax_category_details["taxable_amount"], 2)
+        item_tot_disc = flt(item_tax_category_details["total_discount"], 2)
+
         if key in unique_tax_categories:
-            unique_tax_categories[key]["tax_amount"] += item_tax_category_details["tax_amount"]
-            unique_tax_categories[key]["taxable_amount"] += item_tax_category_details[
-                "taxable_amount"
-            ]
-            unique_tax_categories[key]["total_discount"] += item_tax_category_details[
-                "total_discount"
-            ]
+            unique_tax_categories[key]["tax_amount"] += item_tax_amt
+            unique_tax_categories[key]["taxable_amount"] += item_taxable_amt
+            unique_tax_categories[key]["total_discount"] += item_tot_disc
         else:
+            item_tax_category_details["tax_amount"] = item_tax_amt
+            item_tax_category_details["taxable_amount"] = item_taxable_amt
+            item_tax_category_details["total_discount"] = item_tot_disc
             unique_tax_categories[key] = item_tax_category_details
 
     return list(unique_tax_categories.values())
@@ -869,6 +873,25 @@ class SalesEinvoice(Einvoice):
             0.0, float(base_payable) - prepaid_amount_total
         )
 
+        # ENFORCE ZATCA MATH RULES TO AVOID ROUNDING MISMATCHES (BR-CO-13, BR-CO-14, BR-CO-15)
+        inv = self.result.get("invoice", {})
+        
+        # BR-CO-13: TaxExclusiveAmount = LineExtensionAmount - AllowanceTotalAmount + ChargeTotalAmount
+        line_ext = inv.get("line_extension_amount", 0.0)
+        allowance = inv.get("allowance_total_amount", 0.0)
+        charge = inv.get("charge_total_amount", 0.0)
+        inv["net_total"] = line_ext - allowance + charge
+        
+        # BR-CO-14: TaxAmount = sum(TaxSubtotal.TaxAmount)
+        tax_categories = inv.get("tax_categories", [])
+        total_tax = sum(tc.get("tax_amount", 0.0) for tc in tax_categories)
+        inv["total_taxes_and_charges"] = total_tax
+        inv["base_total_taxes_and_charges"] = total_tax
+
+        # BR-CO-15: TaxInclusiveAmount = TaxExclusiveAmount + TaxAmount
+        inv["grand_total"] = inv["net_total"] + total_tax
+
+
     def compute_invoice_discount_amount(self):
         discount_amount = abs(self.sales_invoice_doc.discount_amount)
         if self.sales_invoice_doc.apply_discount_on != "Grand Total" or discount_amount == 0:
@@ -1081,7 +1104,7 @@ class SalesEinvoice(Einvoice):
             it.rate for it in self.sales_invoice_doc.get("taxes", [])
         )
         self.result["invoice"]["item_lines"] = item_lines
-        self.result["invoice"]["line_extension_amount"] = sum(it["amount"] for it in item_lines)
+        self.result["invoice"]["line_extension_amount"] = sum(flt(it["amount"], 2) for it in item_lines)
         # --------------------------- END Getting Invoice's item lines ------------------------------
 
     def prepayment_invoice(self):
