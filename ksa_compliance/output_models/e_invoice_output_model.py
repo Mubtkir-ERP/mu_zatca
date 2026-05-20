@@ -879,12 +879,18 @@ class SalesEinvoice(Einvoice):
         # BR-CO-13: TaxExclusiveAmount = LineExtensionAmount - AllowanceTotalAmount + ChargeTotalAmount
         line_ext = inv.get("line_extension_amount", 0.0)
         allowance = inv.get("allowance_total_amount", 0.0)
-        charge = inv.get("charge_total_amount", 0.0)
-        inv["net_total"] = line_ext - allowance + charge
-        
         # BR-CO-14: TaxAmount = sum(TaxSubtotal.TaxAmount)
         tax_categories = inv.get("tax_categories", [])
         total_tax = sum(tc.get("tax_amount", 0.0) for tc in tax_categories)
+
+        # FIX: The original _compute_sum_of_charges incorrectly sums VAT into sum_of_charges.
+        # We must recalculate actual charges by subtracting the VAT from ERPNext's total_taxes_and_charges.
+        actual_total_taxes_and_charges = abs(self.sales_invoice_doc.total_taxes_and_charges)
+        charge = max(0.0, actual_total_taxes_and_charges - total_tax)
+        inv["charge_total_amount"] = charge
+
+        inv["net_total"] = line_ext - allowance + charge
+        
         inv["total_taxes_and_charges"] = total_tax
         inv["base_total_taxes_and_charges"] = total_tax
 
