@@ -12,6 +12,31 @@ to a section with the version name.
 > Use these versions **at your own risk** on v15.
 
 ## Unreleased Changes
+
+## 0.68.5
+* fix Could not find Customer Group: Company
+
+## 0.68.5
+* Fix select a non-group Customer Group on create customer
+
+## 0.68.4
+* Fix default argument is evaluated once at import time
+
+## 0.68.3
+* Fix function get_itemised_tax changes on v16
+* Fix none values on einvoice details
+
+## 0.68.2
+* Fix Allow passing customer Additional IDS on Auto Invoices
+
+## 0.68.1
+* Fix Branch Validate Hook Crashing When Company Is Not Set
+  * Guard Against None Company In Is Zatca Enabled To Prevent DoesNotExistError
+
+## 0.68.0
+* Fix background_jobs.py to conditionally enable deduplicate for Frappe v15+
+  * Add type hint for check_date parameter to pass semgrep validation
+
 ## 0.67.9
 * Fix Perform Compliance Checks after Withdrawn ZATCA Business Settings
 

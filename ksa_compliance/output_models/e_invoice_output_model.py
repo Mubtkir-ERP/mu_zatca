@@ -49,7 +49,7 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
             use this calculation to get the actual item amount exclusive of vat: "item_amount / 1 + tax_percent"
         """
         item["amount"] = (
-            (abs(item["amount"]) / (1 + (tax_percent / 100)))
+            flt(abs(item["amount"]) / (1 + (tax_percent / 100)), 2)
             if is_tax_included
             else item["amount"]
         )
@@ -57,17 +57,7 @@ def append_tax_details_into_item_lines(item_lines: list, is_tax_included: bool) 
         item["base_amount"] = item["amount"] + item["discount_amount"]
         item["tax_percent"] = tax_percent
         item["tax_amount"] = tax_amount
-
-        # Fix BR-KSA-51: compute total_amount from pre-rounded components so that
-        # RoundingAmount in XML always equals round(LineExtensionAmount,2) + round(TaxAmount,2)
-        rounded_amount = round(abs(item["amount"]), 2)
-        rounded_tax = round(tax_amount, 2)
-        item["total_amount"] = rounded_amount + rounded_tax
-
-        # Note: PriceAmount (net_price_for_xml) is computed in the Jinja template using
-        # rounded(base_amount,2) - rounded(discount_amount,2) to ensure it uses the same
-        # rounding function (frappe.utils.data.rounded / ROUND_HALF_UP) as BaseAmount and
-        # AllowanceAmount. Python's built-in round() uses banker's rounding which differs.
+        item["total_amount"] = tax_amount + abs(item["amount"])
 
     return item_lines
 
@@ -117,19 +107,15 @@ def append_tax_categories_to_item(item_lines: list, taxes_and_charges: str | Non
             + str(item_tax_category.reason_code)
             + str(item["tax_percent"])
         )
-        
-        item_tax_amt = flt(item_tax_category_details["tax_amount"], 2)
-        item_taxable_amt = flt(item_tax_category_details["taxable_amount"], 2)
-        item_tot_disc = flt(item_tax_category_details["total_discount"], 2)
-
         if key in unique_tax_categories:
-            unique_tax_categories[key]["tax_amount"] += item_tax_amt
-            unique_tax_categories[key]["taxable_amount"] += item_taxable_amt
-            unique_tax_categories[key]["total_discount"] += item_tot_disc
+            unique_tax_categories[key]["tax_amount"] += item_tax_category_details["tax_amount"]
+            unique_tax_categories[key]["taxable_amount"] += item_tax_category_details[
+                "taxable_amount"
+            ]
+            unique_tax_categories[key]["total_discount"] += item_tax_category_details[
+                "total_discount"
+            ]
         else:
-            item_tax_category_details["tax_amount"] = item_tax_amt
-            item_tax_category_details["taxable_amount"] = item_taxable_amt
-            item_tax_category_details["total_discount"] = item_tot_disc
             unique_tax_categories[key] = item_tax_category_details
 
     return list(unique_tax_categories.values())
@@ -873,25 +859,6 @@ class SalesEinvoice(Einvoice):
             0.0, float(base_payable) - prepaid_amount_total
         )
 
-        # ENFORCE ZATCA MATH RULES TO AVOID ROUNDING MISMATCHES (BR-CO-13, BR-CO-14, BR-CO-15)
-        inv = self.result.get("invoice", {})
-        
-        # BR-CO-13: TaxExclusiveAmount = LineExtensionAmount - AllowanceTotalAmount + ChargeTotalAmount
-        line_ext = inv.get("line_extension_amount", 0.0)
-        allowance = inv.get("allowance_total_amount", 0.0)
-        charge = inv.get("charge_total_amount", 0.0)
-        inv["net_total"] = line_ext - allowance + charge
-        
-        # BR-CO-14: TaxAmount = sum(TaxSubtotal.TaxAmount)
-        tax_categories = inv.get("tax_categories", [])
-        total_tax = sum(tc.get("tax_amount", 0.0) for tc in tax_categories)
-        inv["total_taxes_and_charges"] = total_tax
-        inv["base_total_taxes_and_charges"] = total_tax
-
-        # BR-CO-15: TaxInclusiveAmount = TaxExclusiveAmount + TaxAmount
-        inv["grand_total"] = inv["net_total"] + total_tax
-
-
     def compute_invoice_discount_amount(self):
         discount_amount = abs(self.sales_invoice_doc.discount_amount)
         if self.sales_invoice_doc.apply_discount_on != "Grand Total" or discount_amount == 0:
@@ -978,19 +945,6 @@ class SalesEinvoice(Einvoice):
             source_doc=self.sales_invoice_doc,
             xml_name="grand_total",
             parent="invoice",
-        )
-        # Fix: ZATCA validates BR-CO-14: TaxInclusiveAmount = TaxableAmount + TaxAmount
-        # When each value is independently rounded in the XML template, a mismatch occurs.
-        # Example: net_total=458.96671 -> 458.97, tax=68.84501 -> 68.85, sum=527.82
-        #          but grand_total=527.81172 -> 527.81 (independent rounding, not matching sum)
-        # Solution: recalculate grand_total from the already-rounded net_total and tax values
-        # so TaxInclusiveAmount in XML = round(net_total,2) + round(tax,2) consistently.
-        rounded_net = round(abs(self.sales_invoice_doc.net_total), 2)
-        rounded_tax = round(abs(self.sales_invoice_doc.total_taxes_and_charges), 2)
-        self.result["invoice"]["grand_total"] = (
-            -1 * (rounded_net + rounded_tax)
-            if self.sales_invoice_doc.is_return
-            else rounded_net + rounded_tax
         )
         self.get_float_value(
             field_name="total_advance",
@@ -1104,7 +1058,7 @@ class SalesEinvoice(Einvoice):
             it.rate for it in self.sales_invoice_doc.get("taxes", [])
         )
         self.result["invoice"]["item_lines"] = item_lines
-        self.result["invoice"]["line_extension_amount"] = sum(flt(it["amount"], 2) for it in item_lines)
+        self.result["invoice"]["line_extension_amount"] = sum(it["amount"] for it in item_lines)
         # --------------------------- END Getting Invoice's item lines ------------------------------
 
     def prepayment_invoice(self):
@@ -1329,14 +1283,14 @@ class AdvancePaymentEntry(Einvoice):
             # Return invoice (XML): abs(-100.25) + 0.25 = 100.25
             # So the calculation would be wrong if we just used the value of rounding adjustment. We need to recalculate
             # it or adjust its sign to produce the right result in the return case
-            payable_before_prepay = abs(self.sales_invoice_doc.get("rounded_total"))
+            payable_before_prepay = abs(self.sales_invoice_doc.get("rounded_total") or 0)
             tax_inclusive_amount = abs(grand_total)
             prepaid_amount = self.result.get("prepaid_amount", 0.0) or 0.0
             # Apply BR-CO-16 by subtracting pre-paid amount
             self.result["invoice"]["payable_amount"] = max(
                 0.0, payable_before_prepay - prepaid_amount
             )
-            if self.sales_invoice_doc.is_return:
+            if self.sales_invoice_doc.get("is_return"):
                 self.result["invoice"]["rounding_adjustment"] = (
                     payable_before_prepay - tax_inclusive_amount
                 )
