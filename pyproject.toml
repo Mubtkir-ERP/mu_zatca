@@ -1,7 +1,7 @@
 [project]
 name = "ksa_compliance"
 authors = [
-    { name = "LavaLoon", email = "info@lavaloon.com" }
+    { name = "Mubtkir", email = "info@mubtkir.com" , website = "https://mubtkir.com" }
 ]
 description = "KSA Compliance app for E-invoice"
 requires-python = ">=3.10"
@@ -34,3 +34,6 @@ line-length = 99
 [tool.isort]
 profile = "black"
 line_length = 99
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0,<16.0.0"
