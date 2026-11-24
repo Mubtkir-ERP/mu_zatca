@@ -1,7 +1,7 @@
 [project]
 name = "ksa_compliance"
 authors = [
-    { name = "Mubtkir", email = "info@mubtkir.com" , website = "https://mubtkir.com" }
+    { name = "Mubtkir ERP", email = "sales@mubtkir.com" }
 ]
 description = "KSA Compliance app for E-invoice"
 requires-python = ">=3.10"
